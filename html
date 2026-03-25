@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Stopwatch</title>
+<style>
+  body {
+    margin: 0;
+    background: white;
+    transition: background 0.1s;
+  }
+
+  .black {
+    background: black;
+  }
+
+  .flash {
+    background: white !important;
+  }
+</style>
+</head>
+<body>
+
+<script>
+let startTime;
+let timerInterval;
+let running = false;
+
+let laps = [];
+let lastLapTime = 0;
+
+// 시작
+function startTimer() {
+  startTime = Date.now();
+  running = true;
+  laps = [];
+  lastLapTime = 0;
+
+  document.body.classList.add("black");
+
+  timerInterval = setInterval(() => {
+    // 0.1초 단위 계산
+    let elapsed = Date.now() - startTime;
+  }, 100);
+}
+
+// 랩 기록
+function recordLap() {
+  if (!running) return;
+
+  let elapsed = Date.now() - startTime;
+  laps.push(elapsed);
+
+  // 🔥 화면 반짝임
+  document.body.classList.add("flash");
+  setTimeout(() => {
+    document.body.classList.remove("flash");
+  }, 100);
+}
+
+// 종료
+function stopTimer() {
+  running = false;
+  clearInterval(timerInterval);
+
+  document.body.classList.remove("black");
+
+  console.log("===== 결과 =====");
+
+  for (let i = 0; i < laps.length; i++) {
+    let lapTime = laps[i];
+    let interval = lapTime - lastLapTime;
+
+    console.log(
+      "Lap " + (i+1) +
+      " | 전체: " + formatTime(lapTime) +
+      " | 구간: " + formatTime(interval)
+    );
+
+    lastLapTime = lapTime;
+  }
+}
+
+// 시간 포맷 (0.1초 단위)
+function formatTime(ms) {
+  let totalSeconds = ms / 1000;
+  let minutes = Math.floor(totalSeconds / 60);
+  let seconds = Math.floor(totalSeconds % 60);
+  let tenths = Math.floor((ms % 1000) / 100);
+
+  return (
+    String(minutes).padStart(2, '0') + ":" +
+    String(seconds).padStart(2, '0') + "." +
+    tenths
+  );
+}
+
+// 클릭 → 랩
+document.addEventListener("click", function(e) {
+  if (!running) {
+    startTimer();
+  } else {
+    recordLap();
+  }
+});
+
+// 더블클릭 → 종료
+document.addEventListener("dblclick", function(e) {
+  if (running) {
+    stopTimer();
+  }
+});
+</script>
+
+</body>
+</html>
