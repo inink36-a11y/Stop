@@ -2,113 +2,107 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Stopwatch</title>
+<title>Blind Stopwatch</title>
 <style>
-  body {
-    margin: 0;
-    background: white;
-    transition: background 0.1s;
-  }
+    body {
+        margin:0;
+        background:white;
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        font-size:40px;
+        user-select:none;
+        transition:background 0.1s;
+    }
 
-  .black {
-    background: black;
-  }
+    .black {
+        background:black;
+        color:white;
+    }
 
-  .flash {
-    background: white !important;
-  }
+    .flash {
+        background:white !important;
+    }
 </style>
 </head>
 <body>
 
-<script>
-let startTime;
-let timerInterval;
-let running = false;
+<div id="display">Ready</div>
 
+<script>
+let startTime = 0;
+let timer;
+let running = false;
 let laps = [];
 let lastLapTime = 0;
 
-// 시작
+const display = document.getElementById("display");
+const body = document.body;
+
 function startTimer() {
-  startTime = Date.now();
-  running = true;
-  laps = [];
-  lastLapTime = 0;
+    startTime = Date.now();
+    lastLapTime = 0;
+    laps = [];
+    running = true;
+    body.classList.add("black");
+    display.style.display = "none";
 
-  document.body.classList.add("black");
+    timer = setInterval(() => {
+        let now = Date.now();
+        let diff = now - startTime;
 
-  timerInterval = setInterval(() => {
-    // 0.1초 단위 계산
-    let elapsed = Date.now() - startTime;
-  }, 100);
+        let seconds = Math.floor(diff / 1000);
+        let tenth = Math.floor((diff % 1000) / 100);
+
+        display.textContent = seconds + "." + tenth;
+    }, 100);
 }
 
-// 랩 기록
 function recordLap() {
-  if (!running) return;
+    if (!running) return;
 
-  let elapsed = Date.now() - startTime;
-  laps.push(elapsed);
+    let now = Date.now();
+    let diff = now - startTime;
 
-  // 🔥 화면 반짝임
-  document.body.classList.add("flash");
-  setTimeout(() => {
-    document.body.classList.remove("flash");
-  }, 100);
+    let gap = diff - lastLapTime;
+    lastLapTime = diff;
+
+    laps.push(gap);
+
+    // ✅ 반짝임 효과
+    body.classList.add("flash");
+    setTimeout(() => {
+        body.classList.remove("flash");
+    }, 100);
 }
 
-// 종료
 function stopTimer() {
-  running = false;
-  clearInterval(timerInterval);
+    if (!running) return;
 
-  document.body.classList.remove("black");
+    clearInterval(timer);
+    running = false;
+    body.classList.remove("black");
+    display.style.display = "block";
 
-  console.log("===== 결과 =====");
-
-  for (let i = 0; i < laps.length; i++) {
-    let lapTime = laps[i];
-    let interval = lapTime - lastLapTime;
-
-    console.log(
-      "Lap " + (i+1) +
-      " | 전체: " + formatTime(lapTime) +
-      " | 구간: " + formatTime(interval)
-    );
-
-    lastLapTime = lapTime;
-  }
+    console.log("=== 랩 간격 ===");
+    laps.forEach((lap, i) => {
+        console.log((i+1) + "구간:", (lap/1000).toFixed(1) + "초");
+    });
 }
 
-// 시간 포맷 (0.1초 단위)
-function formatTime(ms) {
-  let totalSeconds = ms / 1000;
-  let minutes = Math.floor(totalSeconds / 60);
-  let seconds = Math.floor(totalSeconds % 60);
-  let tenths = Math.floor((ms % 1000) / 100);
-
-  return (
-    String(minutes).padStart(2, '0') + ":" +
-    String(seconds).padStart(2, '0') + "." +
-    tenths
-  );
-}
-
-// 클릭 → 랩
-document.addEventListener("click", function(e) {
-  if (!running) {
-    startTimer();
-  } else {
-    recordLap();
-  }
+// ✅ 클릭 처리
+body.addEventListener("click", (e) => {
+    if (!running) {
+        startTimer();
+    } else {
+        recordLap();
+    }
 });
 
-// 더블클릭 → 종료
-document.addEventListener("dblclick", function(e) {
-  if (running) {
+// ✅ 더블클릭은 클릭과 겹치지 않도록 분리
+body.addEventListener("dblclick", (e) => {
     stopTimer();
-  }
 });
 </script>
 
